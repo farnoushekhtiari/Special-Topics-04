@@ -1,686 +1,697 @@
-# Final Project Development Environment Setup
+# Final Project Setup Guide
 
 ## Overview
-This guide covers setting up a comprehensive development environment for the final project that integrates all course concepts: Git workflows, Docker, FastAPI, PostgreSQL, web crawling, and AI-assisted frontend development.
+This guide will help you set up the complete development environment for the final web crawling platform project. The project consists of multiple services that need to be coordinated and configured properly.
+
+## Architecture Overview
+
+The final project consists of four main services:
+
+1. **Backend API** (FastAPI + PostgreSQL): REST API for managing crawls and data
+2. **Crawler Service** (Python + Crawlee): Asynchronous web crawling engine
+3. **Frontend** (Next.js + React): Web interface for monitoring and management
+4. **AI Service** (Optional): Dedicated AI processing service
 
 ## Prerequisites
-- Completion of all previous subjects
-- All tools from Subjects 1-13 installed
-- GitHub account with repository access
-- Understanding of all course technologies
 
----
+### System Requirements
+- **OS**: Linux, macOS, or Windows 10/11 with WSL2
+- **CPU**: 4+ cores recommended
+- **RAM**: 8GB+ recommended
+- **Storage**: 20GB+ free space
+- **Network**: Stable internet connection
 
-## Project Planning & Architecture
+### Required Software
+- **Docker & Docker Compose**: For containerized development
+- **Git**: Version control
+- **Python 3.9+**: Backend and crawler services
+- **Node.js 18+**: Frontend development
+- **PostgreSQL 13+**: Database (via Docker)
+- **Redis 6+**: Caching and message broker (via Docker)
 
-### Project Requirements Analysis
-The final project requires building a complete web application that includes:
+### API Keys and Services
+- **OpenAI API Key**: For AI content processing
+- **GitHub Account**: For version control and CI/CD
+- **Docker Hub Account**: For container registry (optional)
 
-1. **Data Collection**: Web crawling to gather data
-2. **Data Storage**: PostgreSQL database with optimized schema
-3. **Data Processing**: ETL pipelines for data transformation
-4. **API Layer**: FastAPI REST API for data access
-5. **Frontend**: AI-generated modern web interface
-6. **DevOps**: Docker containerization and CI/CD
-7. **Version Control**: Professional Git workflow
+## Installation Steps
 
-### Technology Stack Selection
-Based on course subjects, use:
-- **Backend**: FastAPI (Python)
-- **Database**: PostgreSQL
-- **Crawling**: Crawlee Python
-- **Containerization**: Docker & Docker Compose
-- **Frontend**: React/Next.js with AI assistance
-- **CI/CD**: GitHub Actions
-- **Version Control**: Git with Git Flow
+### Step 1: Clone the Repository
 
----
-
-## Complete Development Environment Setup
-
-### 1. Project Repository Setup
 ```bash
-# Create project directory
-mkdir final-project
+# Clone the project repository
+git clone <your-project-repository-url>
 cd final-project
 
-# Initialize Git repository
-git init
+# Create necessary directories
+mkdir -p logs backups data/redis data/postgres
 
-# Create initial structure
-mkdir -p \
-  backend/{app,tests,scripts} \
-  frontend/{src,public,tests} \
-  crawler/{src,tests,scripts} \
-  database/{migrations,seeds} \
-  docker \
-  docs \
-  .github/workflows
-
-# Create essential files
-touch README.md docker-compose.yml .env.example
-touch backend/requirements.txt frontend/package.json
+# Set proper permissions
+chmod 755 scripts/*.sh
 ```
 
-### 2. Git Flow Setup
+### Step 2: Environment Configuration
+
+#### Create Environment Files
+
 ```bash
-# Install git-flow
-sudo apt install git-flow  # Linux
-brew install git-flow      # macOS
+# Backend environment
+cat > backend/.env << EOF
+# Database
+DATABASE_URL=postgresql+asyncpg://crawler_user:crawler_pass@localhost:5432/crawler_db
+REDIS_URL=redis://localhost:6379/0
 
-# Initialize git-flow
-git flow init
+# Security
+SECRET_KEY=your-super-secret-key-change-in-production
+JWT_SECRET_KEY=your-jwt-secret-key
+API_KEY=your-api-key-for-external-access
 
-# Create develop branch
-git checkout -b develop
-git push -u origin develop
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MAX_TOKENS=1000
 
-# Create feature branches
-git flow feature start setup-project-structure
+# Application Settings
+DEBUG=true
+LOG_LEVEL=INFO
+CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+
+# Crawler Settings
+MAX_CONCURRENT_CRAWLS=5
+CRAWL_TIMEOUT=30
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
+
+# File Storage
+UPLOAD_DIR=/app/uploads
+EXPORT_DIR=/app/exports
+EOF
+
+# Frontend environment
+cat > frontend/.env.local << EOF
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+NEXT_PUBLIC_APP_ENV=development
+NEXT_PUBLIC_VERSION=1.0.0
+
+# Analytics (optional)
+NEXT_PUBLIC_GA_TRACKING_ID=your-ga-tracking-id
+EOF
+
+# Crawler environment
+cat > crawler/.env << EOF
+DATABASE_URL=postgresql+asyncpg://crawler_user:crawler_pass@localhost:5432/crawler_db
+REDIS_URL=redis://localhost:6379/0
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+
+# Crawler Configuration
+MAX_REQUESTS_PER_CRAWL=1000
+CONCURRENT_REQUESTS=10
+CRAWL_DELAY=1.0
+USER_AGENT=CrawlerPlatform/1.0
+
+# Storage
+DATA_DIR=/app/data
+LOG_DIR=/app/logs
+
+# Monitoring
+PROMETHEUS_PORT=8001
+EOF
 ```
 
----
+#### Configure Docker Environment
 
-## Backend Setup (FastAPI)
-
-### Requirements & Dependencies
-```bash
-# backend/requirements.txt
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-asyncpg==0.29.0
-alembic==1.12.1
-pydantic[email]==2.5.0
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-redis==5.0.1
-celery==5.3.4
-```
-
-### FastAPI Application Structure
-```python
-# backend/app/main.py
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.api import api_router
-from app.core.config import settings
-
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include API router
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-```
-
-### Database Configuration
-```python
-# backend/app/core/config.py
-from pydantic import BaseSettings
-
-class Settings(BaseSettings):
-    PROJECT_NAME: str = "Final Project API"
-    VERSION: str = "1.0.0"
-    API_V1_STR: str = "/api/v1"
-
-    # Database
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "finalproject"
-    DATABASE_URL: str = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}/{POSTGRES_DB}"
-
-    # CORS
-    BACKEND_CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:8080"]
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
-```
-
----
-
-## Database Setup (PostgreSQL)
-
-### Docker Compose for Development
 ```yaml
 # docker-compose.yml
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=finalproject
+      POSTGRES_DB: crawler_db
+      POSTGRES_USER: crawler_user
+      POSTGRES_PASSWORD: crawler_pass
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crawler_user -d crawler_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # Redis Cache/Message Broker
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  api:
-    build: ./backend
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://crawler_user:crawler_pass@postgres:5432/crawler_db
+      - REDIS_URL=redis://redis:6379/0
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db/finalproject
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-  crawler:
-    build: ./crawler
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db/finalproject
+      - ./logs:/app/logs
     depends_on:
-      - db
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Crawler Service
+  crawler:
+    build:
+      context: ./crawler
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://crawler_user:crawler_pass@postgres:5432/crawler_db
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./crawler:/app
+      - ./logs:/app/logs
       - ./data:/app/data
-    command: python src/main.py
+    depends_on:
+      - backend
+      - redis
 
-volumes:
-  postgres_data:
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
 ```
 
-### Database Schema Design
+### Step 3: Database Initialization
+
+#### Create Database Schema
+
 ```sql
--- database/init.sql
+-- scripts/init-db.sql
+-- Database initialization script
+
 -- Create extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "unaccent";
 
--- Create database roles
-CREATE ROLE readonly;
-CREATE ROLE readwrite;
-
--- Grant permissions
-GRANT CONNECT ON DATABASE finalproject TO readonly;
-GRANT CONNECT ON DATABASE finalproject TO readwrite;
-GRANT USAGE ON SCHEMA public TO readonly;
-GRANT USAGE ON SCHEMA public TO readwrite;
-
--- Create tables (will be migrated via Alembic)
--- Tables will be created by backend migrations
+-- Create indexes for better performance
+-- (Additional schema will be created by Alembic migrations)
 ```
 
----
+#### Initialize Alembic for Migrations
 
-## Crawler Setup (Crawlee Python)
-
-### Crawler Dependencies
 ```bash
-# crawler/requirements.txt
-crawlee==0.1.0
-sqlalchemy==2.0.23
-asyncpg==0.29.0
-pydantic==2.5.0
-loguru==0.7.2
-aiofiles==23.2.1
-beautifulsoup4==4.12.2
-lxml==4.9.3
-selenium==4.15.2
-webdriver-manager==4.0.1
+# Backend setup
+cd backend
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Initialize Alembic (if not already done)
+alembic init migrations
+
+# Create initial migration
+alembic revision --autogenerate -m "Initial schema"
+
+# Run migrations
+alembic upgrade head
 ```
 
-### Crawler Application Structure
+### Step 4: Build and Start Services
+
+#### Using Docker Compose (Recommended)
+
+```bash
+# Build all services
+docker-compose build
+
+# Start services
+docker-compose up -d
+
+# Check service health
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+#### Manual Development Setup (Alternative)
+
+```bash
+# Terminal 1: Start database and Redis
+docker-compose up postgres redis -d
+
+# Terminal 2: Backend API
+cd backend
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 3: Frontend
+cd frontend
+npm install
+npm run dev
+
+# Terminal 4: Crawler Service
+cd crawler
+pip install -r requirements.txt
+python -m crawlers.main
+```
+
+### Step 5: Verify Installation
+
+#### Health Checks
+
+```bash
+# Check database connection
+docker-compose exec postgres pg_isready -U crawler_user -d crawler_db
+
+# Check Redis connection
+docker-compose exec redis redis-cli ping
+
+# Check backend API
+curl http://localhost:8000/health
+
+# Check frontend
+curl http://localhost:3000
+```
+
+#### Run Tests
+
+```bash
+# Backend tests
+cd backend
+pytest tests/ -v --cov=app --cov-report=html
+
+# Frontend tests
+cd frontend
+npm test
+
+# Crawler tests
+cd crawler
+python -m pytest tests/ -v
+```
+
+#### Access the Application
+
+- **Frontend Dashboard**: http://localhost:3000
+- **API Documentation**: http://localhost:8000/docs
+- **API Health Check**: http://localhost:8000/health
+- **Database Admin** (if configured): http://localhost:8080
+
+## Configuration Details
+
+### Backend Configuration
+
 ```python
-# crawler/src/main.py
-import asyncio
-import os
-from loguru import logger
-from crawlers.news_crawler import NewsCrawler
-from processors.article_processor import ArticleProcessor
-from database.connection import init_db, save_articles
+# backend/app/core/config.py
+from pydantic import BaseSettings, validator
+from typing import List, Optional
+import secrets
 
-async def main():
-    """Main ETL pipeline"""
-    logger.info("Starting final project ETL pipeline")
+class Settings(BaseSettings):
+    # Application
+    app_name: str = "Crawler Platform API"
+    version: str = "1.0.0"
+    debug: bool = False
+    secret_key: str = secrets.token_urlsafe(32)
 
-    # Initialize database
-    await init_db()
+    # Database
+    database_url: str
 
-    # Configure crawler
-    crawler = NewsCrawler(
-        delay=float(os.getenv("CRAWL_DELAY", "1.0")),
-        max_concurrent=int(os.getenv("MAX_CONCURRENT", "3"))
-    )
+    # Redis
+    redis_url: str = "redis://localhost:6379"
 
-    # Define target websites
-    urls = [
-        "https://news.ycombinator.com/",
-        "https://techcrunch.com/",
-        # Add more relevant sources
-    ]
+    # Security
+    jwt_secret_key: str = secrets.token_urlsafe(32)
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_hours: int = 24
 
-    # Crawl websites
-    logger.info(f"Starting crawl of {len(urls)} websites")
-    raw_data = await crawler.crawl_and_extract(urls)
+    # CORS
+    cors_origins: List[str] = ["http://localhost:3000"]
 
-    # Process data
-    processor = ArticleProcessor()
-    processed_data = processor.process_batch(raw_data)
+    # Crawler Settings
+    max_concurrent_crawls: int = 5
+    crawl_timeout: int = 30
+    rate_limit_requests_per_minute: int = 60
 
-    # Save to database
-    await save_articles(processed_data)
+    # AI Settings
+    openai_api_key: Optional[str] = None
+    openai_model: str = "gpt-3.5-turbo"
+    openai_max_tokens: int = 1000
 
-    logger.info(f"ETL pipeline completed. Processed {len(processed_data)} articles.")
+    # File Storage
+    upload_dir: str = "/app/uploads"
+    export_dir: str = "/app/exports"
 
-if __name__ == "__main__":
-    asyncio.run(main())
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+settings = Settings()
 ```
 
----
+### Crawler Configuration
 
-## Frontend Setup (React + AI)
+```python
+# crawler/config/settings.py
+from pydantic import BaseSettings
+from typing import Optional
 
-### Frontend Dependencies
-```json
-// frontend/package.json
-{
-  "name": "final-project-frontend",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.14.2",
-    "react-scripts": "5.0.1",
-    "styled-components": "^6.0.7",
-    "tailwindcss": "^3.3.3",
-    "web-vitals": "^2.1.4"
+class CrawlerSettings(BaseSettings):
+    # Database
+    database_url: str
+
+    # Redis
+    redis_url: str = "redis://localhost:6379"
+
+    # Crawler
+    max_requests_per_crawl: int = 1000
+    concurrent_requests: int = 10
+    crawl_delay: float = 1.0
+    user_agent: str = "CrawlerPlatform/1.0"
+    respect_robots_txt: bool = True
+
+    # AI
+    openai_api_key: Optional[str] = None
+
+    # Storage
+    data_dir: str = "/app/data"
+    log_dir: str = "/app/logs"
+
+    # Monitoring
+    prometheus_port: int = 8001
+    enable_metrics: bool = True
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+
+crawler_settings = CrawlerSettings()
+```
+
+### Frontend Configuration
+
+```typescript
+// frontend/config/app.ts
+export const appConfig = {
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  wsUrl: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000',
+  appEnv: process.env.NEXT_PUBLIC_APP_ENV || 'development',
+  version: process.env.NEXT_PUBLIC_VERSION || '1.0.0',
+
+  // Feature flags
+  features: {
+    aiProcessing: true,
+    realTimeUpdates: true,
+    advancedSearch: true,
+    exportData: true,
   },
-  "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
+
+  // UI Configuration
+  ui: {
+    theme: 'light',
+    language: 'en',
+    dateFormat: 'YYYY-MM-DD',
+    itemsPerPage: 20,
+  },
+
+  // API endpoints
+  endpoints: {
+    crawls: '/api/crawls',
+    search: '/api/search',
+    analytics: '/api/analytics',
+    health: '/health',
   }
 }
 ```
 
-### React Application Structure
-```jsx
-// frontend/src/App.js
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
-import Home from './pages/Home';
-import Articles from './pages/Articles';
-import Dashboard from './pages/Dashboard';
+## Troubleshooting
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/articles" element={<Articles />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-  );
-}
+### Common Issues
 
-export default App;
-```
-
----
-
-## CI/CD Setup (GitHub Actions)
-
-### GitHub Actions Workflow
-```yaml
-# .github/workflows/ci-cd.yml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test-backend:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    - name: Install dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run tests
-      run: |
-        cd backend
-        python -m pytest tests/ -v --cov=app --cov-report=xml
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-
-  test-frontend:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-    - name: Install dependencies
-      run: |
-        cd frontend
-        npm ci
-    - name: Run tests
-      run: |
-        cd frontend
-        npm test -- --coverage --watchAll=false
-    - name: Build
-      run: |
-        cd frontend
-        npm run build
-
-  deploy:
-    needs: [test-backend, test-frontend]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-    - name: Deploy to production
-      run: echo "Deployment steps here"
-```
-
----
-
-## Docker Configuration
-
-### Backend Dockerfile
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### Frontend Dockerfile
-```dockerfile
-# frontend/Dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Expose port
-EXPOSE 3000
-
-# Start the application
-CMD ["npm", "start"]
-```
-
----
-
-## Environment Configuration
-
-### .env.example
+#### Database Connection Issues
 ```bash
-# Database
-POSTGRES_SERVER=localhost
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=password
-POSTGRES_DB=finalproject
-DATABASE_URL=postgresql://postgres:password@localhost/finalproject
+# Check if PostgreSQL is running
+docker-compose ps postgres
 
-# Redis
-REDIS_URL=redis://localhost:6379
+# Check database logs
+docker-compose logs postgres
 
-# API
-SECRET_KEY=your-super-secret-key-here
-API_V1_STR=/api/v1
-BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://localhost:8080"]
-
-# Crawler
-CRAWL_DELAY=1.0
-MAX_CONCURRENT_REQUESTS=3
-USER_AGENT=FinalProject/1.0
-
-# Frontend
-REACT_APP_API_URL=http://localhost:8000/api/v1
+# Reset database
+docker-compose down -v
+docker-compose up postgres -d
 ```
 
----
-
-## Development Scripts
-
-### Project Management Scripts
+#### Redis Connection Issues
 ```bash
-# scripts/setup.sh - Complete environment setup
-#!/bin/bash
-echo "Setting up final project environment..."
+# Check Redis status
+docker-compose exec redis redis-cli ping
 
-# Create virtual environments
-python -m venv backend/venv
-source backend/venv/bin/activate
-pip install -r backend/requirements.txt
+# Check Redis logs
+docker-compose logs redis
 
-# Frontend setup
+# Restart Redis
+docker-compose restart redis
+```
+
+#### Backend Startup Issues
+```bash
+# Check backend logs
+docker-compose logs backend
+
+# Check if dependencies are installed
+docker-compose exec backend pip list
+
+# Restart backend
+docker-compose restart backend
+```
+
+#### Frontend Build Issues
+```bash
+# Clear Next.js cache
 cd frontend
+rm -rf .next node_modules
 npm install
-cd ..
-
-# Copy environment file
-cp .env.example .env
-
-echo "Environment setup complete!"
+npm run build
 ```
+
+#### Port Conflicts
+```bash
+# Check what's using ports
+lsof -i :3000
+lsof -i :8000
+lsof -i :5432
+
+# Change ports in docker-compose.yml if needed
+```
+
+### Performance Tuning
+
+#### Database Optimization
+```sql
+-- Check database performance
+SELECT * FROM pg_stat_activity;
+SELECT * FROM pg_stat_user_tables;
+ANALYZE; -- Update statistics
+```
+
+#### Memory Usage
+```bash
+# Monitor container memory usage
+docker stats
+
+# Adjust Docker memory limits in docker-compose.yml
+services:
+  backend:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+```
+
+#### Scaling Services
+```bash
+# Scale crawler service
+docker-compose up -d --scale crawler=3
+
+# Add more backend instances
+docker-compose up -d --scale backend=2
+```
+
+## Development Workflow
+
+### Code Quality Tools
 
 ```bash
-# scripts/run-dev.sh - Run development environment
-#!/bin/bash
-echo "Starting development environment..."
-
-# Start Docker services
-docker-compose up -d db redis
-
-# Wait for services
-sleep 10
-
-# Run backend
+# Backend linting
 cd backend
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
-BACKEND_PID=$!
+black . --check
+isort . --check-only
+flake8 .
+mypy .
 
-# Run frontend
-cd ../frontend
-npm start &
-FRONTEND_PID=$!
+# Frontend linting
+cd frontend
+npm run lint
+npm run type-check
 
-# Run crawler (optional)
-cd ../crawler
-python src/main.py &
-CRAWLER_PID=$!
-
-echo "Development environment running!"
-echo "Backend: http://localhost:8000"
-echo "Frontend: http://localhost:3000"
-echo "API Docs: http://localhost:8000/docs"
-
-# Wait for processes
-wait $BACKEND_PID $FRONTEND_PID $CRAWLER_PID
+# Run all tests
+docker-compose exec backend pytest
+docker-compose exec frontend npm test
 ```
 
----
+### Git Workflow
 
-## Testing Strategy
+```bash
+# Create feature branch
+git checkout -b feature/new-feature
 
-### Backend Testing
-```python
-# backend/tests/test_main.py
-from fastapi.testclient import TestClient
-from app.main import app
+# Make changes and commit
+git add .
+git commit -m "Add new feature"
 
-client = TestClient(app)
-
-def test_health_check():
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
-
-def test_api_v1_exists():
-    response = client.get("/api/v1/")
-    assert response.status_code == 200
+# Push and create PR
+git push origin feature/new-feature
 ```
 
-### Frontend Testing
-```jsx
-// frontend/src/components/Header.test.js
-import { render, screen } from '@testing-library/react';
-import Header from './Header';
+### Deployment
 
-test('renders header with navigation', () => {
-  render(<Header />);
-  expect(screen.getByText('Final Project')).toBeInTheDocument();
-  expect(screen.getByText('Articles')).toBeInTheDocument();
-  expect(screen.getByText('Dashboard')).toBeInTheDocument();
-});
+#### Staging Deployment
+```bash
+# Deploy to staging
+docker-compose -f docker-compose.staging.yml up -d
+
+# Run integration tests
+npm run test:integration
 ```
 
----
+#### Production Deployment
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml build
 
-## Documentation Setup
+# Deploy to production
+docker-compose -f docker-compose.prod.yml up -d
 
-### Project Documentation
-```markdown
-# Final Project: Complete Web Application
-
-## Overview
-This project demonstrates the integration of all course concepts into a complete web application featuring data collection, processing, storage, and presentation.
-
-## Architecture
-- **Data Layer**: PostgreSQL with optimized schemas
-- **API Layer**: FastAPI with async operations
-- **Processing Layer**: ETL pipelines with Crawlee
-- **Presentation Layer**: React frontend with AI assistance
-- **Infrastructure**: Docker containerization
-- **CI/CD**: GitHub Actions automation
-
-## Quick Start
-1. Clone the repository
-2. Run `./scripts/setup.sh`
-3. Start development with `./scripts/run-dev.sh`
-4. Access frontend at http://localhost:3000
-
-## API Documentation
-Available at http://localhost:8000/docs when running.
+# Run health checks
+curl -f https://your-domain.com/health
 ```
 
----
+## Security Considerations
+
+### Environment Variables
+- Never commit secrets to version control
+- Use different secrets for each environment
+- Rotate API keys regularly
+
+### Network Security
+```yaml
+# Add to docker-compose.yml for production
+services:
+  backend:
+    networks:
+      - internal
+    # No external port exposure
+
+  frontend:
+    networks:
+      - internal
+      - external
+```
+
+### Data Protection
+- Encrypt sensitive data at rest
+- Use HTTPS for all communications
+- Implement proper authentication and authorization
+- Regular security audits and updates
+
+## Monitoring and Logging
+
+### Application Logs
+```bash
+# View all logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f backend
+
+# Follow logs with timestamps
+docker-compose logs -f --timestamps
+```
+
+### Health Monitoring
+```bash
+# Check all service health
+curl http://localhost:8000/health
+curl http://localhost:3000/api/health
+
+# Database health
+docker-compose exec postgres pg_isready -U crawler_user -d crawler_db
+```
+
+### Performance Monitoring
+```bash
+# Check resource usage
+docker stats
+
+# Database performance
+docker-compose exec postgres psql -U crawler_user -d crawler_db -c "SELECT * FROM pg_stat_activity;"
+```
 
 ## Next Steps
 
-1. **Planning Phase**: Define project requirements and scope
-2. **Architecture Design**: Create detailed system architecture
-3. **Development Phase**: Implement components iteratively
-4. **Integration Phase**: Connect all components
-5. **Testing Phase**: Comprehensive testing and validation
-6. **Deployment Phase**: Production deployment and monitoring
+Once your environment is set up:
 
----
+1. **Explore the codebase** - Familiarize yourself with the project structure
+2. **Run the tests** - Ensure everything is working correctly
+3. **Start development** - Begin implementing features according to the project roadmap
+4. **Set up CI/CD** - Configure automated testing and deployment
+5. **Monitor performance** - Use the built-in monitoring tools to track system health
 
-## Success Criteria
+## Support
 
-- ✅ Complete ETL pipeline from crawling to API
-- ✅ Modern web interface with AI-generated components
-- ✅ Docker containerization for all services
-- ✅ CI/CD pipeline with automated testing
-- ✅ Professional Git workflow and documentation
-- ✅ Performance optimization and monitoring
-- ✅ Security best practices implementation
+If you encounter issues during setup:
 
----
+1. Check the troubleshooting section above
+2. Review the application logs for error messages
+3. Verify all prerequisites are installed correctly
+4. Check the project documentation and README files
+5. Create an issue in the project repository with detailed information
 
-## Resources
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [React Documentation](https://reactjs.org/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Docker Documentation](https://docs.docker.com/)
-- [GitHub Actions](https://docs.github.com/en/actions)
-
----
-
-*This final project represents the culmination of all course learning, demonstrating the ability to build a complete, production-ready web application using modern development practices.*
+Happy coding! 🚀

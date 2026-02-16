@@ -46,44 +46,66 @@ By the end of this subject, you will be able to:
    - Git status, diff, and log commands
    - Undoing changes and commits
 
+5. **[Basic Setup](tutorials/05-basic-setup.md)**
+   - Installing Git on different platforms
+   - Configuring identity and preferences
+   - Setting up SSH keys for GitHub
+   - Verifying installation and troubleshooting
+
+6. **[Branching Fundamentals](tutorials/06-branching-fundamentals.md)**
+   - Understanding branches and their purpose
+   - Creating, switching, and managing branches
+   - Branch visualization and history
+   - Branching strategies and best practices
+
+7. **[GitHub Personal Access Tokens](tutorials/07-github-personal-access-tokens.md)**
+   - Understanding PAT authentication requirements
+   - Generating and managing personal access tokens
+   - Using tokens for Git operations and cloning
+   - Security best practices and token management
+
 ### 🛠️ Workshops (Hands-on Practice)
 
 1. **[Basic Setup](workshops/workshop-01-basic-setup.md)**
    - Installing Git on Windows/macOS/Linux
    - Configuring user settings and SSH keys
    - Setting up GitHub account and authentication
+   - *Corresponding Tutorials: [Basic Setup](tutorials/05-basic-setup.md) & [Personal Access Tokens](tutorials/07-github-personal-access-tokens.md)*
 
 2. **[First Repository](workshops/workshop-02-first-repo.md)**
    - Creating your first repository
    - Basic Git commands (init, add, commit)
    - Connecting to GitHub remote
+   - *Corresponding Tutorial: [Repository Basics](tutorials/02-repository-basics.md)*
 
 3. **[File Operations](workshops/workshop-03-file-operations.md)**
    - Adding, modifying, and deleting files
    - Working with different file types
    - Ignoring files with `.gitignore`
+   - *Corresponding Tutorial: [Working with Files](tutorials/03-working-with-files.md) & [Git States](tutorials/04-git-states.md)*
 
 4. **[Branching](workshops/workshop-04-branching.md)**
    - Creating and switching branches
    - Merging branches and resolving conflicts
    - Branch naming conventions and strategies
+   - *Corresponding Tutorial: [Branching Fundamentals](tutorials/06-branching-fundamentals.md)*
 
 ### 📝 Homework Assignments
 
-1. **[GitHub Setup & Profile](homeworks/homework-01-setup-profile.md)**
-   - Create GitHub account and configure profile
-   - Install Git and set up authentication
-   - Clone course repository and verify setup
+1. **[Personal Repository](homeworks/homework-01-personal-repo.md)**
+   - Create and configure a personal GitHub repository
+   - Set up project structure and documentation
+   - Implement basic Git workflow with proper commit practices
 
-2. **[Personal Repository](homeworks/homework-02-personal-repo.md)**
-   - Create personal project repository
-   - Implement basic Git workflow
-   - Document repository setup and configuration
+2. **[Branching Exercise](homeworks/homework-02-branching-exercise.md)**
+   - Practice Git branching and file operations
+   - Resolve merge conflicts and manage parallel development
+   - Implement feature branch workflow with proper collaboration
 
-3. **[Branching Exercise](homeworks/homework-03-branching-exercise.md)**
-   - Practice advanced branching techniques
-   - Resolve merge conflicts
-   - Implement feature branch workflow
+3. **[Personal Site with GitHub Pages](homeworks/homework-03-personal-site-github-pages.md)**
+   - Create a personal portfolio website using GitHub Pages
+   - Deploy static content and configure custom domains
+   - Implement CI/CD workflows for automated deployment
 
 ### 📋 Assessments
 

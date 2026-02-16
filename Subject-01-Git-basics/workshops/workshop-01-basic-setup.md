@@ -3,12 +3,13 @@
 ## Duration: 30-45 minutes
 
 ## Objective
-By the end of this workshop, you will have Git installed and configured on your system, ready for development work.
+By the end of this workshop, you will have Git installed and configured on your system, ready for development work. You'll also learn about authentication options for working with GitHub repositories.
 
 ## Prerequisites
 - Computer with internet access
 - Administrator privileges (for installation)
 - Text editor (optional, for configuration)
+- GitHub account (for authentication setup)
 
 ## Materials Needed
 - Computer (Windows, macOS, or Linux)
@@ -322,6 +323,24 @@ rm -rf git-test
 Hi username! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
+### Setting Up Personal Access Tokens (Alternative to SSH)
+
+**Why PAT?** GitHub requires token-based authentication for HTTPS operations. PATs are essential for cloning repositories, pushing commits, and other GitHub interactions.
+
+**When to use PAT vs SSH:**
+- **Use SSH** for personal development (more secure, convenient)
+- **Use PAT** when SSH isn't available or for CI/CD systems
+- **Both work** - you can set up both methods
+
+**Note:** GitHub removed password authentication in 2021. You must use either SSH keys or Personal Access Tokens for Git operations.
+
+**For detailed PAT setup:** See [Tutorial 7: GitHub Personal Access Tokens](../tutorials/07-github-personal-access-tokens.md)
+
+**Quick PAT reminder:**
+1. Go to GitHub → Settings → Developer settings → Personal access tokens
+2. Generate new token with `repo` scope
+3. Use in URLs: `https://YOUR_USERNAME:YOUR_PAT@github.com/YOUR_USERNAME/repo.git`
+
 ---
 
 ## Verification Checklist
@@ -335,6 +354,8 @@ Hi username! You've successfully authenticated, but GitHub does not provide shel
 - [ ] You can add files (`git add`)
 - [ ] You can commit files (`git commit`)
 - [ ] You can view history (`git log`)
+- [ ] Authentication method configured (SSH or PAT)
+- [ ] Can authenticate with GitHub (optional)
 
 ---
 
@@ -361,6 +382,13 @@ Hi username! You've successfully authenticated, but GitHub does not provide shel
 - Verify public key is added to GitHub
 - Try: `ssh-add ~/.ssh/id_ed25519` (if using passphrase)
 
+### "Support for password authentication was removed" error
+**Solution:**
+- GitHub no longer accepts passwords for Git operations
+- Set up SSH keys (see Part 4 above) OR
+- Generate a Personal Access Token (see Tutorial 7)
+- Use PAT in repository URLs: `https://username:token@github.com/username/repo.git`
+
 ### Configuration not working
 **Solution:**
 - Check for typos in commands
@@ -375,6 +403,7 @@ Hi username! You've successfully authenticated, but GitHub does not provide shel
 ✅ **Basic Configuration:** Set up user identity and preferences
 ✅ **First Repository:** Created and committed to your first Git repository
 ✅ **Command Line Skills:** Used terminal commands successfully
+✅ **Authentication Options:** Learned about SSH keys and Personal Access Tokens
 ✅ **Optional SSH Setup:** Configured secure connection to GitHub (if completed)
 
 ---
@@ -383,9 +412,9 @@ Hi username! You've successfully authenticated, but GitHub does not provide shel
 
 Now that Git is set up, you can:
 
-1. [Create your first repository](../workshops/workshop-02-first-repo.md)
-2. [Learn about working with files](../tutorials/03-working-with-files.md)
-3. [Set up a GitHub account](https://github.com) for collaboration
+1. [Set up Personal Access Tokens](../tutorials/07-github-personal-access-tokens.md) for GitHub authentication
+2. [Create your first repository](../workshops/workshop-02-first-repo.md)
+3. [Learn about working with files](../tutorials/03-working-with-files.md)
 4. Practice more with the [basic concepts](../tutorials/01-git-intro.md)
 
 ---

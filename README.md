@@ -133,25 +133,92 @@ The culminating project requires students to:
 
 ## Prerequisites
 
-- Basic programming knowledge (Python preferred)
-- Familiarity with command-line interfaces
-- Understanding of web concepts (HTTP, APIs)
-- Computer with Docker support
+### Technical Requirements
+- **Programming Knowledge**: Basic Python programming (variables, functions, classes)
+- **Command Line**: Familiarity with terminal/command prompt operations
+- **Web Concepts**: Understanding of HTTP, APIs, and web architecture
+- **Git**: Basic understanding of version control (covered in Subject 1)
+- **Docker**: Computer capable of running Docker containers
+
+### Software Requirements
+- **Python 3.8+**: Core programming language for the course
+- **Git**: Version control system (installation covered in Subject 1)
+- **Docker & Docker Compose**: Containerization platform
+- **Text Editor/IDE**: VS Code, PyCharm, or similar (VS Code recommended)
+- **Web Browser**: Modern browser for web development and testing
+
+### System Requirements
+- **Operating System**: Windows 10/11, macOS 10.15+, or Linux
+- **RAM**: Minimum 8GB (16GB recommended)
+- **Storage**: 20GB free space for Docker images and project files
+- **Internet Connection**: Required for downloading dependencies and accessing GitHub
+
+### Optional but Recommended
+- **GitHub Account**: For version control and collaboration
+- **PostgreSQL Client**: For database work (pgAdmin, DBeaver, or similar)
+- **API Testing Tool**: Postman, Insomnia, or similar for testing APIs
 
 ## Course Materials
 
 All course materials, code examples, and assignments are available in this repository. Each subject folder contains:
 - `README.md`: Subject overview, goals, and assignments
-- `SCRATCHPAD.md`: Working notes and implementation details
-- Code examples and starter templates
+- `tutorials/`: Conceptual learning materials and reference guides
+- `workshops/`: Hands-on practical exercises and labs
+- `homeworks/`: Individual assignments and projects
+- `assessments/`: Quiz questions, rubrics, and evaluation materials
+- `resources/`: Additional documentation, useful links, and reference materials
+- `installation/`: Setup guides and environment configuration
 
 ## Getting Started
 
-1. Clone this repository
-2. Set up your development environment (Python 3.8+, Docker)
-3. Follow subjects in numerical order
-4. Complete labs and assignments for each subject
-5. Use the final project to demonstrate your learning
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/buqaen-courses/Special-Topics-04.git
+   cd Special-Topics-04
+   ```
+
+2. **Set up your development environment**
+   - Install Python 3.8+ and Docker
+   - Follow installation guides in each subject's `installation/` folder
+   - Set up Git and GitHub (see Subject 1)
+
+3. **Follow subjects in numerical order**
+   - Start with Subject 1: Git Basics & Project Workflows
+   - Each subject builds on previous knowledge
+   - Complete tutorials before attempting workshops
+
+4. **Complete labs and assignments**
+   - Read subject README.md for detailed instructions
+   - Complete workshops for hands-on practice
+   - Submit homeworks via GitHub fork and pull request
+   - Use the provided assessment rubrics
+
+5. **Use the final project to demonstrate your learning**
+   - Build a complete full-stack application
+   - Demonstrate all learned skills
+   - Create documentation and demo video
+
+## Homework Submission
+
+All homework assignments must be submitted via GitHub using the fork-based workflow:
+
+1. **Fork the course repository** to your GitHub account
+2. **Create a Homeworks folder** in your fork with the proper subject structure
+3. **Complete assignments** and commit your work
+4. **Submit a pull request** with your completed homework
+5. **Include required deliverables** (screenshots, documentation, code)
+
+**Example structure for homework submission:**
+```
+Homeworks/
+└── Subject-01-Git-basics/
+    └── homework-02-branching-exercise/
+        ├── README.md (your documentation)
+        ├── screenshots/ (all required screenshots)
+        └── repository-url.txt (link to your exercise repo)
+```
+
+See individual homework assignments for detailed submission requirements.
 
 ## Contributing
 

@@ -193,10 +193,3 @@ Now that Git is installed and configured, you can:
 - [GitHub Git Cheat Sheet](https://github.github.com/training-kit/downloads/github-git-cheat-sheet/)
 - [Interactive Git Tutorial](https://learngitbranching.js.org/)
 
-## Support
-
-If you encounter issues:
-1. Check this troubleshooting section
-2. Search for your error message online
-3. Ask for help in the course discussion forum
-4. Include your error messages and system information when asking for help

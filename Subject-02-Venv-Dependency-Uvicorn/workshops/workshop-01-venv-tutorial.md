@@ -15,6 +15,118 @@ By the end of this workshop, students will understand what Python virtual enviro
 
 ---
 
+## 🚀 Modern uv: Project Initialization with uv init
+
+### What is uv init?
+uv init is uv's modern approach to project setup that combines virtual environment creation with project structure initialization.
+
+### When to Use uv init vs uv venv
+
+**Use `uv init` when:**
+- Starting a new Python project from scratch
+- You want automated project structure setup
+- You need `pyproject.toml` for dependency management
+- You want modern Python packaging standards
+
+**Use `uv venv` when:**
+- Working with existing projects
+- You need manual control over environment setup
+- Migrating from traditional virtual environments
+
+### Step-by-Step: uv init Project Setup
+
+#### Step 1: Initialize Your Project
+```bash
+# Create and navigate to your project directory
+mkdir my-uv-project
+cd my-uv-project
+
+# Initialize with uv (creates pyproject.toml, .python-version, and virtual environment)
+uv init
+```
+
+#### Step 2: What uv init Creates
+After running `uv init`, you'll see these files:
+
+```
+my-uv-project/
+├── .python-version    # Specifies Python version for the project
+├── pyproject.toml     # Modern Python project configuration
+├── .venv/            # Virtual environment (created when first needed)
+│   ├── bin/          # Executables (Linux/Mac)
+│   ├── Scripts/      # Executables (Windows)
+│   ├── Lib/          # Python standard library
+│   └── site-packages/# Installed packages
+└── main.py           # Default entry point (optional, can be removed)
+```
+
+**Note**: The `.venv` directory is created automatically when you first run uv commands that need it (like `uv add` or `uv run`), or you can create it explicitly with `uv venv`.
+
+#### Step 3: Understanding the Generated Files
+
+**`.python-version`** - Specifies which Python version uv should use:
+```bash
+cat .python-version
+# Output: 3.13
+```
+
+**`pyproject.toml`** - Modern project configuration:
+```toml
+[project]
+name = "my-uv-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+```
+
+**`.venv/`** - Your virtual environment (created automatically)
+
+#### Step 4: Working with uv init Projects
+```bash
+# The virtual environment is automatically activated in uv commands
+# No need to manually activate/deactivate for most operations
+
+# Add dependencies
+uv add requests fastapi
+
+# Run your application
+uv run python main.py
+
+# Run scripts or commands in the environment
+uv run uvicorn main:app --reload
+```
+
+#### Step 5: uv init vs Traditional uv venv
+
+| Feature | uv init | uv venv |
+|---------|---------|---------|
+| Project structure | ✅ Creates `pyproject.toml` | ❌ Manual setup needed |
+| Virtual environment | ✅ Auto-created | ✅ Manual creation |
+| Python version | ✅ Managed via `.python-version` | ❌ Manual specification |
+| Dependencies | ✅ Modern `uv add` workflow | ⚠️ Traditional pip |
+| Activation | ✅ Auto-handled by uv | ✅ Manual activation needed |
+
+### Real-World uv init Example
+```bash
+# Create a FastAPI project
+mkdir fastapi-blog
+cd fastapi-blog
+uv init
+
+# Add dependencies
+uv add fastapi uvicorn
+
+# Create your app (replace the default main.py)
+# Write your FastAPI code...
+
+# Run the application
+uv run uvicorn main:app --reload
+```
+
+---
+
 ## 🔍 What is uv? Why Do We Need It?
 
 ### The Problem: Global Package Conflicts
@@ -102,13 +214,22 @@ source .venv/bin/activate
 ### Step 5: Verify Activation
 ```bash
 # Check which Python we're using
-which python  # Shows path to uv python
+which python  # Linux/Mac: Shows path to uv python
+where python  # Windows: May show nothing if Python not in PATH
 python --version
 
+# Alternative verification (works on all platforms):
+# Check if you're in the virtual environment
+echo $VIRTUAL_ENV  # Linux/Mac: Shows .venv path if activated
+echo %VIRTUAL_ENV% # Windows CMD: Shows .venv path if activated
+
 # Check pip location
-which pip
+which pip     # Linux/Mac: Shows pip location
+where pip     # Windows: May show nothing if pip not in PATH
 pip --version
 ```
+
+**Note for Windows users**: If `where python` shows nothing, this is normal! It means Python isn't in your system PATH. The virtual environment is still working - you can verify with `python --version` and `echo %VIRTUAL_ENV%`.
 
 ### Step 6: Install Packages
 ```bash
@@ -172,10 +293,16 @@ source .venv/bin/activate
 deactivate
 
 # Check Python path
-which python
+which python   # Linux/Mac
+where python   # Windows (may show nothing if Python not in PATH)
 
 # Check pip path
-which pip
+which pip      # Linux/Mac
+where pip      # Windows (may show nothing if pip not in PATH)
+
+# Alternative verification (all platforms)
+echo $VIRTUAL_ENV   # Linux/Mac: Shows .venv path if activated
+echo %VIRTUAL_ENV%  # Windows: Shows .venv path if activated
 
 # List installed packages
 pip list
@@ -206,6 +333,13 @@ pip uninstall package-name
 ### Issue 4: Packages Still Install Globally
 **Problem**: `uv add` installs to system Python
 **Solution**: Make sure environment is activated (check `(uv)` in prompt)
+
+### Issue 5: where python Shows Nothing (Windows)
+**Problem**: `where python` doesn't show any output on Windows
+**Solution**: This is normal! On Windows, Python often isn't in system PATH by default. Verify activation with:
+- `python --version` (should show Python version)
+- `echo %VIRTUAL_ENV%` (should show `.venv` path)
+- `pip --version` (should show virtual environment pip)
 
 ---
 

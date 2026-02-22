@@ -208,5 +208,7 @@
 - **Git Mailing List** - For advanced Git questions
 
 ---
-
+### Persian Links
+ - [Jadi Git Video Series](https://faradars.org/courses/fvgit9609-git-github-gitlab)
+ 
 *This resource list is regularly updated. Bookmark it and check back for new additions!* 🚀
